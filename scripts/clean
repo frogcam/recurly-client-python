@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+rm -f ./recurly/resources.py
+rm -f ./recurly/client.py
