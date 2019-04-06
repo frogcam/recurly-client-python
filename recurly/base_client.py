@@ -54,7 +54,4 @@ class BaseClient:
             klass = locate("recurly.errors.%s" % class_name)
             raise klass(error.message, error)
 
-        return self.cast_response(resp_json)
-
-    def cast_response(self, json_obj):
-        return Resource.cast(json_obj)
+        return Resource.cast(resp_json)
