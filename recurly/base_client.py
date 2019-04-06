@@ -3,6 +3,8 @@ from base64 import b64encode
 import json
 from . import resources
 from .resource import Resource
+from recurly import ApiError
+from pydoc import locate
 
 PORT = 443
 HOST = 'partner-api.recurly.com'
@@ -37,7 +39,22 @@ class BaseClient:
         self.__conn.request(method, path,
                           body, headers = headers)
         resp = self.__conn.getresponse()
-        return self.cast_response(json.loads(resp.read()))
+        resp_json = json.loads(resp.read())
+
+        if resp.status >= 400:
+            # TODO Some of this code can be shared
+            resp_json = resp_json['error']
+            resp_json['object'] = 'error'
+            error = Resource.cast(resp_json)
+            typ = error.type
+            name_parts = typ.split('_')
+            class_name = ''.join(x.title() for x in name_parts)
+            if not class_name.endswith('Error'):
+                class_name += 'Error'
+            klass = locate("recurly.errors.%s" % class_name)
+            raise klass(error.message, error)
+
+        return self.cast_response(resp_json)
 
     def cast_response(self, json_obj):
         return Resource.cast(json_obj)
